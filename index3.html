@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>הצעת מחיר - שניר הפקות</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 40px;
+    }
+    .page-container {
+      max-width: 700px;
+      margin: auto;
+    }
+    .form-container, .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    .form-container {
+      margin-bottom: 30px;
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #007BFF;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-grid .form-field, .notes-section {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-field label {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #555;
+    }
+    .form-field input, .dynamic-note-input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .note-input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .add-note-btn, .remove-note-btn {
+        padding: 8px 12px;
+        font-size: 1em;
+        background-color: #e0e0e0;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .add-note-btn {
+        background-color: #cdeeff;
+    }
+    .remove-note-btn {
+        background-color: #ffdddd;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .note {
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #555;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      text-align: center;
+      color: #999;
+    }
+    .download-button {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .download-button button {
+      padding: 12px 25px;
+      font-size: 18px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
+     /* Style for the logo in the PDF */
+    .pdf-logo {
+        display: block;
+        max-width: 400px; /* Adjust size as needed */
+        margin: 0 auto 10px;
+    }
+    .download-button button:hover {
+      background-color: #0056b3;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page-container">
+  
+  <!-- FORM FOR DATA INPUT -->
+  <div class="form-container no-print">
+    <h3>מילוי פרטי הצעה</h3>
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="offer-date">תאריך הצעה</label>
+        <input type="text" id="offer-date">
+      </div>
+      <div class="form-field">
+        <label for="client-name">שם הלקוח</label>
+        <input type="text" id="client-name" value="תנובה">
+      </div>
+      <div class="form-field">
+        <label for="show-name">שם ההצגה</label>
+        <input type="text" id="show-name" value="המעגל הפתוח - בטיחות בעבודה">
+      </div>
+      <div class="form-field">
+        <label for="show-date">תאריך ההצגה</label>
+        <input type="text" id="show-date" value="17.9.2025">
+      </div>
+      <div class="form-field">
+        <label for="show-time">שעה</label>
+        <input type="text" id="show-time" value="12:00">
+      </div>
+      <div class="form-field">
+        <label for="show-location">מקום</label>
+        <input type="text" id="show-location" value="כפר תבור">
+      </div>
+      <div class="form-field">
+        <label for="show-cost">עלות ההצגה (₪)</label>
+        <input type="number" id="show-cost" value="3800">
+      </div>
+      <div class="form-field">
+        <label for="travel-cost">נסיעות (₪)</label>
+        <input type="number" id="travel-cost" value="800">
+      </div>
+    </div>
+
+    <hr style="margin: 30px 0; border: 1px solid #eee;">
+    
+    <div class="notes-section">
+        <label style="font-weight: bold; color: #555; margin-bottom: 10px;">הערות ופרטים נוספים</label>
+        <div id="dynamic-notes-container">
+            <!-- Dynamic note fields will be injected here -->
+        </div>
+        <button type="button" class="add-note-btn" onclick="addNoteField()">+ הוסף הערה</button>
+    </div>
+
+    <div class="download-button">
+      <button onclick="downloadPDF()">הכן והורד PDF</button>
+    </div>
+  </div>
+
+  <!-- PDF CONTENT TEMPLATE -->
+  <div class="container" id="quote-content" style="display: none;">
+    <!--<h1>שניר&nbspהפקות</h1>-->
+    <img src="https://itasnir.github.io/SnirProdPriceOffer/logo2.png" alt="לוגו שניר הפקות" class="pdf-logo">
+    <h2 style="font-size:2.5em;">הצעת&nbspמחיר</h2>
+    <p><strong>&colon;תאריך&nbspהצעה</strong> <span id="output-offer-date"></span></p>
+    <table>
+      <tr>
+        <td><strong>&colon;שם&nbspהלקוח</strong></td>
+        <td id="output-client-name"></td>
+      </tr>
+      <tr>
+        <td><strong>&colon;שם&nbspההצגה</strong></td>
+        <td id="output-show-name"></td>
+      </tr>
+      <tr>
+        <td><strong>&colon;תאריך&nbspההצגה</strong></td>
+        <td id="output-show-date"></td>
+      </tr>
+      <tr>
+        <td><strong>&colon;שעה</strong></td>
+        <td id="output-show-time"></td>
+      </tr>
+      <tr>
+        <td><strong>&colon;מקום</strong></td>
+        <td id="output-show-location"></td>
+      </tr>
+      <tr>
+        <td><strong>&colon;עלות&nbspההצגה</strong></td>
+        <td id="output-show-cost"></td>
+      </tr>
+      <tr>
+        <td><strong>&colon;נסיעות</strong></td>
+        <td id="output-travel-cost"></td>
+      </tr>
+      <tr>
+        <td><strong>&colon;סה"כ</strong></td>
+        <td id="output-total-cost"></td>
+      </tr>
+    </table>
+    <div class="note">
+        <!-- Dynamic bullet points will be injected here -->
+    </div>
+    <div class="footer">
+      עוסק מורשה 004204111
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function addNoteField() {
+    const container = document.getElementById('dynamic-notes-container');
+    const noteGroup = document.createElement('div');
+    noteGroup.className = 'note-input-group';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'dynamic-note-input';
+    input.placeholder = 'הזן טקסט...';
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-note-btn';
+    removeBtn.innerText = '-';
+    removeBtn.onclick = () => {
+        noteGroup.remove();
+    };
+
+    noteGroup.appendChild(input);
+    noteGroup.appendChild(removeBtn);
+    container.appendChild(noteGroup);
+  }
+
+  // Set default date and add initial note fields on page load
+  window.onload = () => {
+    const today = new Date();
+    const d = today.getDate();
+    const m = today.getMonth() + 1; // JavaScript months are 0-11
+    const y = today.getFullYear();
+    document.getElementById('offer-date').value = `${d}.${m}.${y}`;
+
+    // Add default note fields
+    addNoteField();
+    document.querySelector('.dynamic-note-input').value = "המחיר אינו כולל מע״מ.";
+    addNoteField();
+    document.querySelector('#dynamic-notes-container .note-input-group:last-child .dynamic-note-input').value = "תנאי התשלום: שוטף + 30.";
+  };
+
+  function downloadPDF() {
+    // --- 1. Get all values from the form inputs ---
+    const formValues = {
+        'offer-date': document.getElementById('offer-date').value,
+        'client-name': document.getElementById('client-name').value,
+        'show-name': document.getElementById('show-name').value,
+        'show-date': document.getElementById('show-date').value,
+        'show-time': document.getElementById('show-time').value,
+        'show-location': document.getElementById('show-location').value,
+        'show-cost': document.getElementById('show-cost').value,
+        'travel-cost': document.getElementById('travel-cost').value,
+    };
+    
+    const noteInputs = document.querySelectorAll('.dynamic-note-input');
+    const notes = Array.from(noteInputs).map(input => input.value).filter(value => value.trim() !== '');
+
+    const showCost = parseFloat(formValues['show-cost']) || 0;
+    const travelCost = parseFloat(formValues['travel-cost']) || 0;
+    const totalCost = showCost + travelCost;
+
+    // --- 2. Create a clone of the template for the PDF ---
+    const originalTemplate = document.getElementById("quote-content");
+    const elementToPrint = originalTemplate.cloneNode(true);
+    elementToPrint.style.display = 'block';
+
+    // --- 3. Populate clone with data and hide empty rows/sections ---
+
+    const sanitizeForPDF = (str) => {
+        if (typeof str !== 'string') return str;
+        // General sanitization without touching the period
+        return str.replace(/ /g, '&nbsp;').replace(/-/g, '&#8209;').replace(/:/g, '&colon;');
+    };
+
+    const updateRow = (id, rawValue) => {
+        const outputElement = elementToPrint.querySelector(`#output-${id}`);
+        if (!outputElement) return;
+        const row = outputElement.closest('tr');
+        if (row) {
+            row.style.display = rawValue ? 'table-row' : 'none';
+            if(rawValue) outputElement.innerHTML = sanitizeForPDF(rawValue) //.replace(/\./g, '&middot;'); // Use middot for dates etc.
+        }
+    };
+    
+    const updateCostRow = (id, rawValue, parsedValue) => {
+        const outputElement = elementToPrint.querySelector(`#output-${id}`);
+        if (!outputElement) return;
+        const row = outputElement.closest('tr');
+        if (row) {
+            row.style.display = rawValue ? 'table-row' : 'none';
+            if(rawValue) outputElement.innerHTML = `\u200e₪&nbsp;${parsedValue.toLocaleString('he-IL')}`;
+        }
+    };
+
+    // Offer Date
+    const offerDateP = elementToPrint.querySelector('#output-offer-date').parentElement;
+    offerDateP.style.display = formValues['offer-date'] ? 'block' : 'none';
+    if(formValues['offer-date']) elementToPrint.querySelector('#output-offer-date').innerHTML = sanitizeForPDF(formValues['offer-date']) //.replace(/\./g, '&middot;');
+
+    // Update table rows
+    updateRow('client-name', formValues['client-name']);
+    updateRow('show-name', formValues['show-name']);
+    updateRow('show-date', formValues['show-date']);
+    updateRow('show-time', formValues['show-time']);
+    updateRow('show-location', formValues['show-location']);
+    
+    // Update cost rows
+    updateCostRow('show-cost', formValues['show-cost'], showCost);
+    updateCostRow('travel-cost', formValues['travel-cost'], travelCost);
+
+    // Update total row
+    elementToPrint.querySelector('#output-total-cost').innerHTML = `<strong>\u200e₪&nbsp;${totalCost.toLocaleString('he-IL')}</strong>`;
+    elementToPrint.querySelector('#output-total-cost').closest('tr').style.display = formValues['travel-cost'] ? 'table-row' : 'none';
+    
+    // Update notes section
+    const noteSection = elementToPrint.querySelector('.note');
+    if (notes.length > 0) {
+        noteSection.style.display = 'block';
+        const bulletsHTML = notes.map(note => {
+            let processedNote;
+            // Handle the period separately for notes
+            if (note.trim().endsWith('.')) {
+                processedNote = sanitizeForPDF(note.slice(0, -1)) + '<span dir="ltr">.</span>';
+            } else {
+                processedNote = sanitizeForPDF(note);
+            }
+            // By wrapping the bullet in a span with dir="rtl", we ensure it follows the RTL flow.
+            //return `<div style="text-align: right;">${processedNote}<span dir="rtl">&nbsp;&bull;</span></div>`;
+            return `<div style="text-align: right;"><span dir="rtl">&nbsp;&bull;</span>${processedNote}</div>`;
+        }).join('');
+        noteSection.innerHTML = `<strong>${bulletsHTML}</strong>`;
+    } else {
+        noteSection.style.display = 'none';
+    }
+
+
+    // --- 4. Generate the PDF from the modified clone ---
+    const filename = formValues['client-name'] ? `הצעת_מחיר_${formValues['client-name'].replace(/ /g, '_')}.pdf` : 'הצעת_מחיר.pdf';
+    const opt = {
+      margin:       0.5,
+      filename:     filename,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(elementToPrint).save();
+  }
+</script>
+</body>
+</html>
+
